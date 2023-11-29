@@ -1,0 +1,44 @@
+IMDB <- read.csv("~/Downloads/IMDB Dataset.csv")
+
+exper <- IMDB[1,1]
+
+#Switch to lowercase
+exper <- tolower(gsub("[^a-zA-Z\\s]", " ", exper))
+
+#Split into a list
+tokens <- strsplit(exper, " ")
+head(tokens)
+
+#Remove Stopwords
+stopwords <- c(stopwords("english"),"")
+newexper <- lapply(tokens, function(sentence) sentence[!sentence %in% stopwords])
+head(newexper)
+
+library(udpipe)
+
+# Load the English model
+ud_model <- udpipe_download_model(language = "english", model_dir = getwd())
+ud_model <- udpipe_load_model(ud_model$file_model)
+
+convert_adverbs_to_adjectives <- function(word_list) {
+  # Annotate the word list
+  annotations <- udpipe_annotate(ud_model, x = word_list)
+  lemmas <- as.data.frame(annotations)
+  
+  # Convert adverbs to adjectives
+  lemmas$lemma <- ifelse(lemmas$upos == "ADV", sub("ly$", "", lemmas$lemma), lemmas$lemma)
+  
+  # Extract the modified word list
+  modified_word_list <- lemmas$lemma
+  
+  return(modified_word_list)
+}
+
+# Example list of words
+word_list <- c("quickly", "run", "happily", "sing")
+
+# Convert adverbs to adjectives
+modified_word_list <- convert_adverbs_to_adjectives(word_list)
+
+# Display the modified word list
+print(modified_word_list)
