@@ -1,0 +1,102 @@
+---
+title: "Stats 101C Final Project"
+author: "Noor Benny"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Read the CSV file
+data <- read.csv("IMDB Dataset.csv", stringsAsFactors = FALSE) 
+View(data)
+
+# Display the structure or summary of the data
+str(data)
+summary(data)
+
+```
+
+# Data Cleaning 
+```{r}
+library(tm)
+library(stringr)
+library(SnowballC)
+
+# Read the CSV file
+data <- read.csv("IMDB Dataset.csv", stringsAsFactors = FALSE)
+
+# Take a subset of the first 10 rows
+subset_data <- data[1:10, ] 
+View(subset_data) 
+
+
+
+# Function to split words
+split_words <- function(text) {
+  words <- unlist(strsplit(text, "\\s+"))
+  return(words)
+}
+
+# Apply word splitting to 'review' column in the subset
+subset_data$split_words <- sapply(subset_data$review, split_words)
+
+# Displaying the original text and split words for subset
+head(subset_data[c("review", "split_words")]) 
+View(subset_data)
+subset_data$split_words[1]
+```
+
+```{r}
+# stop words 
+subset_data$split_words <- lapply(subset_data$split_words, function(words) {
+  words_without_stopwords <- removeWords(words, stopwords("english"))
+  return(words_without_stopwords)
+})
+
+subset_data$split_words[1] 
+
+# lowercase 
+subset_data$split_words <- lapply(subset_data$split_words, function(words) {
+  words_lower <- tolower(words)
+  return(words_lower)
+})
+subset_data$split_words[1] 
+
+# no numbers 
+subset_data$split_words <- lapply(subset_data$split_words, function(words) {
+  words_no_numbers <- gsub("\\d+", "", words)
+  return(words_no_numbers)
+})
+subset_data$split_words[1] 
+
+# special characters 
+subset_data$split_words <- lapply(subset_data$split_words, function(words) {
+  words_no_special <- gsub("[^[:alnum:] ]", "", words)
+  return(words_no_special)
+})
+subset_data$split_words[1] 
+
+# pronouns 
+library(SnowballC)
+
+# Define a list of pronouns
+pronouns <- c("i", "me", "my", "myself", "we", "us", "our", "ours", "ourselves", 
+              "you", "your", "yours", "yourself", "yourselves", 
+              "he", "him", "his", "himself", "she", "her", "hers", "herself",
+              "it", "its", "itself", "they", "them", "their", "theirs", "themselves")
+
+# Remove pronouns from each element in split_words column
+subset_data$split_words <- lapply(subset_data$split_words, function(words) {
+  words_no_pronouns <- words[!(tolower(words) %in% pronouns)]
+  return(words_no_pronouns)
+})
+
+
+subset_data$split_words[1] 
+
+```
+
