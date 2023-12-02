@@ -1,0 +1,44 @@
+import numpy as np
+import nltk
+import pandas as pd
+from nltk.tag import pos_tag
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('stopwords')
+
+df = pd.read_csv("~/Downloads/preprocessed.csv")
+
+for i in range(5):
+    print(f"Review {i+1}: {df['review'][i]}")
+
+# Check the number of unique words after preprocessing
+unique_words = set(word for tokens in df['review'] for word in tokens)
+print(f"Number of unique words: {len(unique_words)}")
+
+# If the number of unique words is very low, consider adjusting the preprocessing steps
+
+# Feature extraction using TfidfVectorizer
+vectorizer = TfidfVectorizer(max_features=5000, ngram_range=(1, 2), max_df=0.95)
+X = vectorizer.fit_transform(df['review'])
+y = df['sentiment']
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train a Random Forest model
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+
+# Make predictions on the test set
+y_pred = rf_model.predict(X_test)
+
+# Evaluate the accuracy of the model
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy}")
